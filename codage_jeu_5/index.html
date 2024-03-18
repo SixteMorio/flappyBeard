@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Bird Clone</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      background-image: url("img/background/space.jpg");
+      margin: 0 auto;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <img id="birdImage" src="img/player/vaisseau.png" style="display: none;">
+  <img id="pipeImage" src="img/pipe/laser-reverse.png" style="display: none;">
+  <img id="invertedPipeImage" src="img/pipe/laser.png" style="display: none;">
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const birdImage = document.getElementById("birdImage");
+    const pipeImage = document.getElementById("pipeImage");
+    const invertedPipeImage = document.getElementById("invertedPipeImage");
+
+    // Bird
+    const bird = {
+      x: 50,
+      y: canvas.height / 2 - birdImage.height / 2,
+      width: 50,
+      height: 50,
+      velocity: 0,
+      gravity: 0.15,
+      jumpStrength: 4,
+    };
+
+    // Pipes
+    const pipes = [];
+    const pipeWidth = 50;
+    const pipeGap = 130;
+    const pipeSpeed = 2;
+
+    let score = 0;
+    let highScore = 0;
+
+    // Draw the bird
+    function drawBird() {
+      ctx.drawImage(birdImage, bird.x, bird.y, bird.width, bird.height);
+    }
+
+    function drawPipe(x, height) {
+      // Draw the pipes
+      ctx.drawImage(pipeImage, x, 0, pipeWidth, height);
+
+      // Draw the inverse pipes
+      ctx.drawImage(invertedPipeImage, x, height + pipeGap, pipeWidth, canvas.height - height - pipeGap);
+    }
+
+    // Draw the score
+    function drawScore() {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "30px Arial";
+      ctx.fillText("Score: " + score, 10, 50);
+    }
+
+    // Draw the Hight score
+    function drawHighScore() {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "30px Arial";
+      ctx.fillText("High Score: " + highScore, 600, 50);
+    }
+
+    // Draw the End
+    function drawEnd() {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(255, 255, 300, 125);
+
+      ctx.fillStyle = "#000000";
+      ctx.font = "30px Arial";
+      ctx.fillText("Score: " + score + " !", 340, 300);
+      ctx.fillText("Press Enter to play", 280, 350);
+    }
+
+    // Update
+    function update() {
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+
+      if (bird.y < 0) {
+        bird.y = 0;
+        bird.velocity = 0;
+      }
+
+      if (bird.y + bird.height > canvas.height) {
+        bird.y = canvas.height - bird.height;
+        bird.velocity = 0;
+      }
+
+      if (pipes.length === 0 || pipes[pipes.length - 1].x <= canvas.width - 300) {
+        const pipeHeight = Math.floor(Math.random() * (canvas.height - pipeGap));
+        pipes.push({ x: canvas.width, height: pipeHeight });
+      }
+
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        pipes[i].x -= pipeSpeed;
+
+        // Collision with pipes
+        if (
+          bird.x < pipes[i].x + pipeWidth &&
+          bird.x + bird.width > pipes[i].x &&
+          (bird.y < pipes[i].height || bird.y + bird.height > pipes[i].height + pipeGap)
+        ) {
+          // Update high score 
+          if (score > highScore) {
+            highScore = score;
+          }
+          // Reset the game
+          resetGame();
+          // Draw the end message
+          drawEnd();
+        }
+
+        if (pipes[i].x + pipeWidth < bird.x && !pipes[i].scored) {
+          // Bird passed the pipe
+          pipes[i].scored = true;
+          score++;
+        }
+
+        if (pipes[i].x + pipeWidth < 0) {
+          pipes.splice(i, 1);
+        }
+      }
+    }
+
+    // Draw game
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawBird();
+
+      for (const pipe of pipes) {
+        drawPipe(pipe.x, pipe.height);
+      }
+
+      drawScore();
+      drawHighScore();
+    }
+
+    // Reset game
+    function resetGame() {
+      bird.y = canvas.height / 2 - birdImage.height / 2;
+      bird.velocity = 0;
+      pipes.length = 0;
+      score = 0;
+    }
+
+    // Flap
+    function flap() {
+      bird.velocity = -bird.jumpStrength;
+    }
+
+    // Reload Game
+    document.addEventListener("keydown", function (event) {
+      if (event.code === "Enter") {
+        if (bird.velocity === 0 && pipes.length === 0) {
+          resetGame();
+          gameLoop();
+        }
+      }
+    });
+
+    // Flap touch
+    document.addEventListener("keydown", function (event) {
+      if (event.code === "Space") {
+        flap();
+      }
+    });
+
+    //Game loop
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+
+</html>

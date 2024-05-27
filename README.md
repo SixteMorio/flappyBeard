@@ -1,6 +1,6 @@
-# FlappyBeard English
+# FlappyBird English
 
-Here is a FlappyBeard type game coded in html/javascript.
+Here is a FlappyBird type game coded in html/javascript.
 
 To play it: - copied / pasted the coding_game_5 folder into a code reader. (VScode)
             - launch the live server
